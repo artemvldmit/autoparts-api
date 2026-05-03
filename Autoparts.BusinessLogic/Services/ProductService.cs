@@ -1,64 +1,56 @@
 using AutoMapper;
 using Autoparts.BusinessLogic.Interfaces;
-using Autoparts.DataAccess;
+using Autoparts.DataAccess.Repositories.Interfaces;
 using Autoparts.Domains.DTOs;
 using Autoparts.Domains.Entities;
-using Microsoft.EntityFrameworkCore;
 
 namespace Autoparts.BusinessLogic.Services;
 
 public class ProductService : IProductService
 {
-    private readonly AppDbContext _db;
+    private readonly IProductRepository _repo;
     private readonly IMapper _mapper;
 
-    public ProductService(AppDbContext db, IMapper mapper)
+    public ProductService(IProductRepository repo, IMapper mapper)
     {
-        _db = db;
+        _repo = repo;
         _mapper = mapper;
     }
 
     public async Task<IEnumerable<ProductDto>> GetAllAsync()
     {
-        var products = await _db.Products.ToListAsync();
+        var products = await _repo.GetAllAsync();
         return _mapper.Map<IEnumerable<ProductDto>>(products);
     }
 
     public async Task<ProductDto?> GetByIdAsync(int id)
     {
-        var product = await _db.Products.FindAsync(id);
+        var product = await _repo.GetByIdAsync(id);
         return product is null ? null : _mapper.Map<ProductDto>(product);
     }
 
     public async Task<IEnumerable<ProductDto>> GetByCategoryAsync(string category)
     {
-        var products = await _db.Products.Where(p => p.Category == category).ToListAsync();
+        var products = await _repo.GetByCategoryAsync(category);
         return _mapper.Map<IEnumerable<ProductDto>>(products);
     }
 
     public async Task<ProductDto> CreateAsync(CreateProductDto dto)
     {
         var product = _mapper.Map<Product>(dto);
-        _db.Products.Add(product);
-        await _db.SaveChangesAsync();
+        await _repo.CreateAsync(product);
         return _mapper.Map<ProductDto>(product);
     }
 
     public async Task<ProductDto?> UpdateAsync(int id, UpdateProductDto dto)
     {
-        var product = await _db.Products.FindAsync(id);
+        var product = await _repo.GetByIdAsync(id);
         if (product is null) return null;
         _mapper.Map(dto, product);
-        await _db.SaveChangesAsync();
+        await _repo.UpdateAsync(product);
         return _mapper.Map<ProductDto>(product);
     }
 
-    public async Task<bool> DeleteAsync(int id)
-    {
-        var product = await _db.Products.FindAsync(id);
-        if (product is null) return false;
-        _db.Products.Remove(product);
-        await _db.SaveChangesAsync();
-        return true;
-    }
+    public async Task<bool> DeleteAsync(int id) =>
+        await _repo.DeleteAsync(id);
 }

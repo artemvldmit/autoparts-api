@@ -1,41 +1,39 @@
 using AutoMapper;
 using Autoparts.BusinessLogic.Interfaces;
-using Autoparts.DataAccess;
+using Autoparts.DataAccess.Repositories.Interfaces;
 using Autoparts.Domains.DTOs;
 using Autoparts.Domains.Entities;
-using Microsoft.EntityFrameworkCore;
 
 namespace Autoparts.BusinessLogic.Services;
 
 public class OrderService : IOrderService
 {
-    private readonly AppDbContext _db;
+    private readonly IOrderRepository _orderRepo;
+    private readonly IProductRepository _productRepo;
     private readonly IMapper _mapper;
 
-    public OrderService(AppDbContext db, IMapper mapper)
+    public OrderService(IOrderRepository orderRepo, IProductRepository productRepo, IMapper mapper)
     {
-        _db = db;
+        _orderRepo = orderRepo;
+        _productRepo = productRepo;
         _mapper = mapper;
     }
 
     public async Task<IEnumerable<OrderDto>> GetAllAsync()
     {
-        var orders = await _db.Orders.Include(o => o.OrderItems).ThenInclude(oi => oi.Product).ToListAsync();
+        var orders = await _orderRepo.GetAllWithItemsAsync();
         return _mapper.Map<IEnumerable<OrderDto>>(orders);
     }
 
     public async Task<OrderDto?> GetByIdAsync(int id)
     {
-        var order = await _db.Orders.Include(o => o.OrderItems).ThenInclude(oi => oi.Product).FirstOrDefaultAsync(o => o.Id == id);
+        var order = await _orderRepo.GetByIdWithItemsAsync(id);
         return order is null ? null : _mapper.Map<OrderDto>(order);
     }
 
     public async Task<IEnumerable<OrderDto>> GetByUserAsync(int userId)
     {
-        var orders = await _db.Orders
-            .Include(o => o.OrderItems).ThenInclude(oi => oi.Product)
-            .Where(o => o.UserId == userId)
-            .ToListAsync();
+        var orders = await _orderRepo.GetByUserAsync(userId);
         return _mapper.Map<IEnumerable<OrderDto>>(orders);
     }
 
@@ -45,7 +43,7 @@ public class OrderService : IOrderService
 
         foreach (var item in dto.OrderItems)
         {
-            var product = await _db.Products.FindAsync(item.ProductId);
+            var product = await _productRepo.GetByIdAsync(item.ProductId);
             if (product is null) continue;
 
             order.OrderItems.Add(new OrderItem
@@ -57,29 +55,19 @@ public class OrderService : IOrderService
         }
 
         order.TotalPrice = order.OrderItems.Sum(oi => oi.Quantity * oi.UnitPrice);
-
-        _db.Orders.Add(order);
-        await _db.SaveChangesAsync();
-
-        await _db.Entry(order).Collection(o => o.OrderItems).Query().Include(oi => oi.Product).LoadAsync();
+        await _orderRepo.CreateAsync(order);
         return _mapper.Map<OrderDto>(order);
     }
 
     public async Task<OrderDto?> UpdateAsync(int id, UpdateOrderDto dto)
     {
-        var order = await _db.Orders.Include(o => o.OrderItems).ThenInclude(oi => oi.Product).FirstOrDefaultAsync(o => o.Id == id);
+        var order = await _orderRepo.GetByIdWithItemsAsync(id);
         if (order is null) return null;
         order.Status = dto.Status;
-        await _db.SaveChangesAsync();
+        await _orderRepo.UpdateAsync(order);
         return _mapper.Map<OrderDto>(order);
     }
 
-    public async Task<bool> DeleteAsync(int id)
-    {
-        var order = await _db.Orders.FindAsync(id);
-        if (order is null) return false;
-        _db.Orders.Remove(order);
-        await _db.SaveChangesAsync();
-        return true;
-    }
+    public async Task<bool> DeleteAsync(int id) =>
+        await _orderRepo.DeleteAsync(id);
 }
