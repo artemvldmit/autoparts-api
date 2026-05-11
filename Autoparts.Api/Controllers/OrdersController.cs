@@ -15,15 +15,15 @@ public class OrdersController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll() => Ok(await _service.GetAllAsync());
 
+    [HttpGet("user/{userId}")]
+    public async Task<IActionResult> GetByUser(int userId) => Ok(await _service.GetByUserAsync(userId));
+
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
         var result = await _service.GetByIdAsync(id);
         return result is null ? NotFound() : Ok(result);
     }
-
-    [HttpGet("user/{userId}")]
-    public async Task<IActionResult> GetByUser(int userId) => Ok(await _service.GetByUserAsync(userId));
 
     [HttpPost]
     public async Task<IActionResult> Create(CreateOrderDto dto)

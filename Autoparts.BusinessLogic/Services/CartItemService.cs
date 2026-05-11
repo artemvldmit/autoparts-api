@@ -37,8 +37,8 @@ public class CartItemService : ICartItemService
         {
             existing.Quantity += dto.Quantity;
             await _repo.UpdateAsync(existing);
-            await _repo.GetByIdWithProductAsync(existing.Id);
-            return _mapper.Map<CartItemDto>(existing);
+            var updated = await _repo.GetByIdWithProductAsync(existing.Id);
+            return _mapper.Map<CartItemDto>(updated!);
         }
 
         var item = _mapper.Map<CartItem>(dto);
