@@ -1,9 +1,12 @@
+using Autoparts.Api.Filters;
 using Autoparts.BusinessLogic.Interfaces;
 using Autoparts.Domains.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Autoparts.Api.Controllers;
 
+// User и Admin: корзина доступна только авторизованным
+[Authorized]
 [ApiController]
 [Route("api/[controller]")]
 public class CartItemsController : ControllerBase

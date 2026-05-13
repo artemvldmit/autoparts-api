@@ -32,6 +32,7 @@ public class UserService : IUserService
     public async Task<UserDto> CreateAsync(CreateUserDto dto)
     {
         var user = _mapper.Map<User>(dto);
+        user.PasswordHash = dto.Password;
         await _repo.CreateAsync(user);
         return _mapper.Map<UserDto>(user);
     }

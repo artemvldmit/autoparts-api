@@ -19,6 +19,16 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Order>().Property(o => o.TotalPrice).HasColumnType("decimal(18,2)");
         modelBuilder.Entity<OrderItem>().Property(oi => oi.UnitPrice).HasColumnType("decimal(18,2)");
 
+        modelBuilder.Entity<User>().HasData(
+            new User
+            {
+                Id = 1, Name = "Admin", Email = "admin@autoparts.ru",
+                Phone = "+7 (000) 000-00-00", Role = "Admin",
+                PasswordHash = "admin123",
+                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            }
+        );
+
         modelBuilder.Entity<Product>().HasData(
             new Product { Id = 1, Name = "Масляный фильтр Mann", Price = 450, Category = "filters", ImageUrl = "https://images.unsplash.com/photo-1600712242805-5f78671b24da?w=300&h=200&fit=crop", Stock = 50 },
             new Product { Id = 2, Name = "Воздушный фильтр Bosch", Price = 380, Category = "filters", ImageUrl = "https://images.unsplash.com/photo-1625047509168-a7026f36de04?w=300&h=200&fit=crop", Stock = 40 },

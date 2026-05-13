@@ -1,9 +1,12 @@
+using Autoparts.Api.Filters;
 using Autoparts.BusinessLogic.Interfaces;
 using Autoparts.Domains.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Autoparts.Api.Controllers;
 
+// Admin: управление пользователями только для администратора
+[AdminMod]
 [ApiController]
 [Route("api/[controller]")]
 public class UsersController : ControllerBase

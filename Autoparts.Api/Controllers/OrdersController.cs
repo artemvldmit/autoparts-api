@@ -1,9 +1,12 @@
+using Autoparts.Api.Filters;
 using Autoparts.BusinessLogic.Interfaces;
 using Autoparts.Domains.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Autoparts.Api.Controllers;
 
+// User и Admin: заказы доступны только авторизованным
+[Authorized]
 [ApiController]
 [Route("api/[controller]")]
 public class OrdersController : ControllerBase
@@ -12,6 +15,8 @@ public class OrdersController : ControllerBase
 
     public OrdersController(IOrderService service) => _service = service;
 
+    // Admin: список всех заказов
+    [AdminMod]
     [HttpGet]
     public async Task<IActionResult> GetAll() => Ok(await _service.GetAllAsync());
 
@@ -39,6 +44,8 @@ public class OrdersController : ControllerBase
         return result is null ? NotFound() : Ok(result);
     }
 
+    // Admin: только администратор может удалять заказы
+    [AdminMod]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
